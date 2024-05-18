@@ -15,7 +15,7 @@ use crate::{
 
 use actix_web::{
     http::header,
-    web::{self, Bytes, Data, FormConfig, PayloadConfig},
+    web::{self, Bytes, BytesMut, Data, FormConfig, PayloadConfig},
     App, Error, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 use askama::{Html as AskamaHtml, MarkupDisplay, Template};
@@ -172,15 +172,15 @@ async fn highlight_css() -> HttpResponse {
     static CSS: Lazy<Bytes> = Lazy::new(|| {
         highlight::BAT_ASSETS.with(|s| {
             Bytes::from(
-                css_for_theme_with_class_style(s.get_theme("OneHalfDark"), ClassStyle::Spaced)
-                    .unwrap(),
+                css_for_theme_with_class_style(s.get_theme("TwoDark"), ClassStyle::Spaced).unwrap(),
             )
         })
     });
 
-    HttpResponse::Ok()
-        .content_type("text/css")
-        .body(CSS.clone())
+    let mut css: BytesMut = BytesMut::with_capacity(0);
+    css.extend(CSS.clone());
+    css.extend(Bytes::from("\nbody { background: #282c34; }"));
+    HttpResponse::Ok().content_type("text/css").body(css)
 }
 
 fn render_template<T: Template>(req: &HttpRequest, template: &T) -> Result<HttpResponse, Error> {
