@@ -1,13 +1,14 @@
-# bin
+# perbin
+
 a paste bin.
 
-A paste bin that's actually minimalist. No database requirement, no commenting functionality, no self-destructing or time bomb messages and no social media integration—just an application to quickly send snippets of text to people.
+A fork of w4/bin that's still pretty minimalist. Adds simple persistence and customizes the theme to my own preference.
 
 [bin](https://bin.gy/) is written in Rust in around 300 lines of code. It's fast, it's simple, there's code highlighting and you can ⌘+A without going to the 'plain' page. It's revolutionary in the paste bin industry, disrupting markets and pushing boundaries never seen before.
 
-##### so how do you get bin?
+##### so how do you get perbin?
 
-Download the latest version from the [releases](https://github.com/w4/bin/releases) page, extract it and run the `./bin` executable. You can also compile it from source using Cargo if you swing that way:
+Compile it from source using Cargo:
 
 ```bash
 # nix-shell provides an environment with rust/cargo installed
