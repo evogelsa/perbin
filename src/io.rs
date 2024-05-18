@@ -4,10 +4,13 @@ use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::cell::RefCell;
+use std::fs;
 
 pub type PasteStore = RwLock<LinkedHashMap<String, Bytes>>;
 
 static BUFFER_SIZE: Lazy<usize> = Lazy::new(|| argh::from_env::<crate::BinArgs>().buffer_size);
+
+const DATA_DIR: &str = "data/";
 
 /// Ensures `ENTRIES` is less than the size of `BIN_BUFFER_SIZE`. If it isn't then
 /// `ENTRIES.len() - BIN_BUFFER_SIZE` elements will be popped off the front of the map.
@@ -18,7 +21,13 @@ fn purge_old(entries: &mut LinkedHashMap<String, Bytes>) {
         let to_remove = entries.len() - *BUFFER_SIZE;
 
         for _ in 0..to_remove {
-            entries.pop_front();
+            let result = entries.pop_front();
+            match result {
+                Some(r) => {
+                    fs::remove_file(r.0).expect("Removing file failed");
+                }
+                None => {}
+            }
         }
     }
 }
@@ -42,6 +51,10 @@ pub fn store_paste(entries: &PasteStore, id: String, content: Bytes) {
 
     purge_old(&mut entries);
 
+    let mut fid = id.to_owned();
+    fid.insert_str(0, DATA_DIR);
+
+    fs::write(fid, &content).expect("Writing file failed");
     entries.insert(id, content);
 }
 
@@ -51,4 +64,24 @@ pub fn store_paste(entries: &PasteStore, id: String, content: Bytes) {
 pub fn get_paste(entries: &PasteStore, id: &str) -> Option<Bytes> {
     // need to box the guard until owning_ref understands Pin is a stable address
     entries.read().get(id).map(Bytes::clone)
+}
+
+// Read pastes from data/ into map
+pub fn load_pastes(entries: &PasteStore) {
+    let paths = fs::read_dir(DATA_DIR).unwrap();
+    for path in paths {
+        let p = path.unwrap().path();
+        let fid = p.to_str().expect("Failed to ID paste");
+        let bytes = fs::read(fid).expect("Failed to read paste");
+
+        let name = p.file_name().expect("Failed to get file name");
+        let id = String::from(
+            name.to_str()
+                .expect("Failed to convert file name to string"),
+        );
+        let data = Bytes::from(bytes);
+
+        let mut entries = entries.write();
+        entries.insert(id, data);
+    }
 }

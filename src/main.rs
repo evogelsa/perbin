@@ -9,7 +9,7 @@ mod params;
 use crate::{
     errors::{InternalServerError, NotFound},
     highlight::highlight,
-    io::{generate_id, get_paste, store_paste, PasteStore},
+    io::{generate_id, get_paste, load_pastes, store_paste, PasteStore},
     params::{HostHeader, IsPlaintextRequest},
 };
 
@@ -54,6 +54,7 @@ async fn main() -> std::io::Result<()> {
     let args: BinArgs = argh::from_env();
 
     let store = Data::new(PasteStore::default());
+    load_pastes(&store);
 
     let server = HttpServer::new({
         let args = args.clone();
