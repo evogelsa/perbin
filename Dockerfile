@@ -13,4 +13,4 @@ COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /data /data
 
 EXPOSE 8000
-ENTRYPOINT ["/pastebin", "0.0.0.0:8000" "--max-paste-size 131072"]
+ENTRYPOINT ["/pastebin", "0.0.0.0:8000" "--max-paste-size", "131072"]
